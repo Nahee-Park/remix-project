@@ -84,6 +84,7 @@
     border-radius: .25rem;
     background: var(--custom-select);
   }
+
   .custom-dropdown-items a {
     border-radius: .25rem;
     text-transform: none;
@@ -93,5 +94,9 @@
     padding: 0.25rem 0.25rem;
     width: auto;
     color: var(--text);
+  }
+
+  .checkout-input {
+    font-size: 10px !important;
   }
   
