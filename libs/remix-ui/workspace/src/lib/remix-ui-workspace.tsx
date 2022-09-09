@@ -17,7 +17,6 @@ export function Workspace () {
   const [showDropdown, setShowDropdown] = useState<boolean>(false)
   const [showBranches, setShowBranches] = useState<boolean>(false)
   const [branchFilter, setBranchFilter] = useState<string>('')
-  const [selectedBranch, setSelectedBranch] = useState<string>('')
   const global = useContext(FileSystemContext)
   const workspaceRenameInput = useRef()
   const workspaceCreateInput = useRef()
@@ -25,6 +24,7 @@ export function Workspace () {
   const cloneUrlRef = useRef<HTMLInputElement>()
   const initGitRepoRef = useRef<HTMLInputElement>()
   const filteredBranches = selectedWorkspace ? (selectedWorkspace.branches || []).filter(branch => branch.name.includes(branchFilter) && branch.remote).slice(0, 20) : []
+  const currentBranch = selectedWorkspace ? selectedWorkspace.currentBranch : null
 
   useEffect(() => {
     setCurrentWorkspace(localStorage.getItem('currentWorkspace') ? localStorage.getItem('currentWorkspace') : '')
@@ -56,7 +56,7 @@ export function Workspace () {
     const workspace = global.fs.browser.workspaces.find(workspace => workspace.name === currentWorkspace)
 
     setSelectedWorkspace(workspace)
-    workspace && setSelectedBranch(workspace.currentBranch)
+    // workspace && setSelectedBranch(workspace.currentBranch)
   }, [currentWorkspace])
 
   const renameCurrentWorkspace = () => {
@@ -180,7 +180,6 @@ export function Workspace () {
   const switchToBranch = async (branch: string) => {
     try {
       await global.dispatchSwitchToBranch(branch)
-      setSelectedBranch(branch)
     } catch (e) {
       global.modal('Checkout Git Branch', e.message, 'OK', () => {})
     }
@@ -189,7 +188,6 @@ export function Workspace () {
   const switchToNewBranch = async () => {
     try {
       await global.dispatchSwitchToNewBranch(branchFilter)
-      setSelectedBranch(branchFilter)
     } catch (e) {
       global.modal('Checkout Git Branch', e.message, 'OK', () => {})
     }
@@ -461,7 +459,7 @@ export function Workspace () {
             <div className="pt-1 mr-1">
               <Dropdown style={{ height: 30, minWidth: 80 }} onToggle={toggleBranches} show={showBranches} drop={'up'}>
                 <Dropdown.Toggle as={CustomToggle} id="dropdown-custom-components" className="btn btn-light btn-block w-100 d-inline-block border border-dark form-control h-100 p-0 pl-2 pr-2 text-dark" icon={null}>
-                  { global.fs.browser.isRequestingCloning ? <i className="fad fa-spinner fa-spin"></i> : selectedBranch || '-none-' }
+                  { global.fs.browser.isRequestingCloning ? <i className="fad fa-spinner fa-spin"></i> : currentBranch || '-none-' }
                 </Dropdown.Toggle>
 
                 <Dropdown.Menu as={CustomMenu} className='custom-dropdown-items branches-dropdown' data-id="custom-dropdown-items">
@@ -484,7 +482,7 @@ export function Workspace () {
                         return (
                           <Dropdown.Item key={index} onClick={() => { switchToBranch(branch.name) }}>
                             { 
-                              selectedBranch === branch.name ?
+                              currentBranch === branch.name ?
                               <span>&#10003; { branch.name } </span> :
                               <span className="pl-3">{ branch.name }</span>
                             }
@@ -493,7 +491,7 @@ export function Workspace () {
                       }) : 
                       <Dropdown.Item onClick={switchToNewBranch}>
                         <div className="pl-1 pr-1">
-                          <i className="fas fa-code-branch pr-2"></i><span>Create branch: { branchFilter } from '{selectedBranch}'</span>
+                          <i className="fas fa-code-branch pr-2"></i><span>Create branch: { branchFilter } from '{currentBranch}'</span>
                         </div>
                       </Dropdown.Item>
                     }
