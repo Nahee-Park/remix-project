@@ -15,8 +15,8 @@ module.exports = {
   'Should launch debugger #group1': function (browser: NightwatchBrowser) {
     browser.addFile('blah.sol', sources[0]['blah.sol'])
       .clickLaunchIcon('udapp')
-      .waitForElementPresent('*[title="Deploy - transact (not payable)"]', 65000)
-      .click('*[title="Deploy - transact (not payable)"]')
+      .waitForElementPresent('*[data-title="Deploy - transact (not payable)"]', 66000)
+      .click('*[data-title="Deploy - transact (not payable)"]')
       .debugTransaction(0)
       .waitForElementContainsText('*[data-id="sidePanelSwapitTitle"]', 'DEBUGGER', 60000)
       .clearConsole()
@@ -228,7 +228,7 @@ module.exports = {
       .waitForElementVisible('*[data-id="solidityLocals"]', 60000)
       .pause(10000)
       .checkVariableDebug('soliditylocals', { num: { value: '2', type: 'uint256' } })
-      .checkVariableDebug('soliditystate', { number: { value: '0', type: 'uint256', constant: false, immutable: false } })      
+      .checkVariableDebug('soliditystate', { number: { value: '0', type: 'uint256', constant: false, immutable: false } })
   },
 
   'Should debug reverted transactions #group5': function (browser: NightwatchBrowser) {
@@ -254,7 +254,7 @@ const sources = [
     'blah.sol': {
       content: `
     pragma solidity >=0.7.0 <0.9.0;
- 
+
     contract Kickstarter {
 
         enum State { Started, Completed }
@@ -264,9 +264,9 @@ const sources = [
             string name;
             uint goal;
             State state;
-        }    
+        }
 
-        Project[] public projects;    
+        Project[] public projects;
 
         constructor() {
 
@@ -279,7 +279,7 @@ const sources = [
             project.state = State.Started;
             project.goal = goal;
         }
-    } 
+    }
         `
     }
   },
@@ -297,12 +297,12 @@ const sources = [
     function test1 (bytes calldata userData) external returns (bytes memory, bytes32, bytes32, uint) {
         bytes32 idAsk = abi.decode(userData[:33], (bytes32));
         bytes32 idOffer = abi.decode(userData[32:64], (bytes32));
-              
+
         bytes memory ro  = abi.encodePacked(msg.sender, msg.sender, idAsk, idOffer);
         return (ro, idAsk, idOffer, userData.length);
     }
-    
-    
+
+
     function testgp (bytes calldata userData) external returns (bytes4) {
         return  abi.decode(userData[:4], (bytes4));
     }
@@ -329,9 +329,9 @@ const sources = [
     'withGeneratedSources.sol': {
       content: `
       // SPDX-License-Identifier: GPL-3.0
-      pragma experimental ABIEncoderV2; 
-      contract A { 
-        function f(uint[] memory) public returns (uint256) { } 
+      pragma experimental ABIEncoderV2;
+      contract A {
+        function f(uint[] memory) public returns (uint256) { }
       }
       `
     }
@@ -360,7 +360,7 @@ const sources = [
           }
 
           /**
-           * @dev Return value 
+           * @dev Return value
            * @return value of 'number'
            */
           function retrieve() public view returns (uint256){
@@ -381,14 +381,14 @@ const sources = [
         function callA() public {
             p = 123;
             try b.callB() {
-                
+
             }
             catch (bytes memory reason) {
-    
+
             }
         }
     }
-    
+
     contract B {
         C c;
         uint p;
@@ -401,7 +401,7 @@ const sources = [
             c.callC();
         }
     }
-    
+
     contract C {
         uint p;
         function callC() public {
@@ -486,7 +486,7 @@ const jsGetTrace = `(async () => {
   }
 })()`
 
-const jsDebug = `(async () => {    
+const jsDebug = `(async () => {
   try {
       const result = await remix.call('debugger', 'debug', '0x65f0813753462414f9a91f0aabea946188327995f54b893b63a8d7ff186cfca3')
       console.log('result ', result)
