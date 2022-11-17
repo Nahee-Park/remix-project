@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useContext, SyntheticEvent, ChangeEvent, KeyboardEvent } from 'react' // eslint-disable-line
-import { Dropdown, OverlayTrigger, Tooltip } from 'react-bootstrap'
-import { CustomIconsToggle, CustomMenu, CustomToggle } from '@remix-ui/helper'
+import { FormattedMessage, useIntl } from 'react-intl'
+import { Dropdown } from 'react-bootstrap'
+import { CustomIconsToggle, CustomMenu, CustomToggle, CustomTooltip } from '@remix-ui/helper'
 import { FileExplorer } from './components/file-explorer' // eslint-disable-line
 import { FileSystemContext } from './contexts'
 import './css/remix-ui-workspace.css'
@@ -28,6 +29,7 @@ export function Workspace () {
   const workspaceRenameInput = useRef()
   const workspaceCreateInput = useRef()
   const workspaceCreateTemplateInput = useRef()
+  const intl = useIntl()
   const cloneUrlRef = useRef<HTMLInputElement>()
   const initGitRepoRef = useRef<HTMLInputElement>()
   const filteredBranches = selectedWorkspace ? (selectedWorkspace.branches || []).filter(branch => branch.name.includes(branchFilter) && branch.name !== 'HEAD').slice(0, 20) : []
@@ -70,19 +72,31 @@ export function Workspace () {
   }, [currentWorkspace])
 
   const renameCurrentWorkspace = () => {
-    global.modal('Rename Current Workspace', renameModalMessage(), 'OK', onFinishRenameWorkspace, '')
+    global.modal(intl.formatMessage({id: 'filePanel.workspace.rename', defaultMessage: 'Rename Current Workspace'}), renameModalMessage(), 'OK', onFinishRenameWorkspace, '')
   }
 
   const createWorkspace = () => {
-    global.modal('Create Workspace', createModalMessage(), 'OK', onFinishCreateWorkspace, '')
+    global.modal(intl.formatMessage({id: 'filePanel.workspace.create', defaultMessage: 'Create Workspace'}), createModalMessage(), 'OK', onFinishCreateWorkspace, '')
   }
 
   const deleteCurrentWorkspace = () => {
-    global.modal('Delete Current Workspace', 'Are you sure to delete the current workspace?', 'OK', onFinishDeleteWorkspace, '')
+    global.modal(
+      intl.formatMessage({id: 'filePanel.workspace.delete', defaultMessage: 'Delete Current Workspace'}),
+      intl.formatMessage({id: 'filePanel.workspace.deleteConfirm', defaultMessage: 'Are you sure to delete the current workspace?'}),
+      'OK',
+      onFinishDeleteWorkspace,
+      ''
+    )
   }
 
   const cloneGitRepository = () => {
-    global.modal('Clone Git Repository', cloneModalMessage(), 'OK', handleTypingUrl, '')
+    global.modal(
+      intl.formatMessage({id: 'filePanel.workspace.clone', defaultMessage: 'Clone Git Repository'}),
+      cloneModalMessage(),
+      'OK',
+      handleTypingUrl,
+      ''
+    )
   }
 
   const downloadWorkspaces = async () => {
@@ -202,7 +216,7 @@ export function Workspace () {
     // @ts-ignore
     workspaceCreateInput.current.value = `${workspaceCreateTemplateInput.current.value + '_upgradeable'}_${Date.now()}`
   }
-  
+
   const toggleBranches = (isOpen: boolean) => {
     setShowBranches(isOpen)
   }
@@ -244,7 +258,7 @@ export function Workspace () {
   const createModalMessage = () => {
     return (
       <>
-        <label id="selectWsTemplate" className="form-check-label" style={{fontWeight: "bolder"}}>Choose a template</label>
+        <label id="selectWsTemplate" className="form-check-label" style={{fontWeight: "bolder"}}><FormattedMessage id='filePanel.workspace.chooseTemplate' defaultMessage='Choose a template' /></label>
         <select name="wstemplate" className="mb-3 form-control custom-select" id="wstemplate" defaultValue='remixDefault' ref={workspaceCreateTemplateInput} onChange={updateWsName}>
           <optgroup style={{fontSize: "medium"}} label="General">
             <option style={{fontSize: "small"}} value='remixDefault'>Default</option>
@@ -303,6 +317,7 @@ export function Workspace () {
             data-id="initGitRepository"
             className="form-check-input custom-control-input"
             type="checkbox"
+            disabled={!global.fs.gitConfig.username || !global.fs.gitConfig.email}
             onChange={() => {}}
           />
           <label
@@ -314,6 +329,11 @@ export function Workspace () {
             Initialize workspace as a new git repository
           </label>
         </div>
+        {!global.fs.gitConfig.username || !global.fs.gitConfig.email ? 
+          (
+          <div className='text-warning'>Please add username and email to Remix GitHub Settings to use git features.</div>)
+          :<></>
+        }
 
       </>
     )
@@ -330,35 +350,38 @@ export function Workspace () {
   const cloneModalMessage = () => {
     return (
       <>
-        <input type="text" data-id="modalDialogCustomPromptTextClone" placeholder='Enter git repository url' ref={cloneUrlRef} className="form-control" />
+        <input
+          type="text"
+          data-id="modalDialogCustomPromptTextClone"
+          placeholder={intl.formatMessage({id: 'filePanel.workspace.enterGitUrl', defaultMessage: 'Enter git repository url'})}
+          ref={cloneUrlRef}
+          className="form-control"
+        />
       </>
     )
   }
 
   const workspaceMenuIcons = [
-    <OverlayTrigger
+    <CustomTooltip
       placement="right"
-      overlay={
-        <Tooltip id="createWorkspaceTooltip" className="text-nowrap">
-          <span>Create</span>
-        </Tooltip>
-      }
+      tooltipId="createWorkspaceTooltip"
+      tooltipClasses="text-nowrap"
+      tooltipText={<FormattedMessage id='filePanel.workspace.create' defaultMessage='Create Workspace' />}
     >
       <div
         data-id='workspaceCreate'
-        onClick={(e) => {
-          e.stopPropagation()
+        onClick={() => {
           createWorkspace()
           _paq.push(['trackEvent', 'fileExplorer', 'workspaceMenu', 'workspaceCreate'])
           hideIconsMenu(!showIconsMenu)
         }}
+        key={`workspacesCreate-fe-ws`}
       >
         <span
           hidden={currentWorkspace === LOCALHOST}
           id='workspaceCreate'
           data-id='workspaceCreate'
-          onClick={(e) => {
-            e.stopPropagation()
+          onClick={() => {
             createWorkspace()
             _paq.push(['trackEvent', 'fileExplorer', 'workspaceMenu', 'workspaceCreate'])
             hideIconsMenu(!showIconsMenu)
@@ -366,32 +389,29 @@ export function Workspace () {
           className='far fa-plus pl-2'
         >
         </span>
-        <span className="pl-3">Create</span>
+        <span className="pl-3"><FormattedMessage id='filePanel.create' defaultMessage='Create' /></span>
       </div>
-    </OverlayTrigger>,
-    <OverlayTrigger
+    </CustomTooltip>,
+    <CustomTooltip
       placement="right-start"
-      overlay={
-        <Tooltip id="createWorkspaceTooltip" className="text-nowrap">
-          <span>Delete Workspace</span>
-        </Tooltip>
-      }
+      tooltipId="createWorkspaceTooltip"
+      tooltipClasses="text-nowrap"
+      tooltipText={<FormattedMessage id='filePanel.workspace.delete' defaultMessage='Delete Workspace' />}
     >
       <div
         data-id='workspaceDelete'
-        onClick={(e) => {
-          e.stopPropagation()
+        onClick={() => {
           deleteCurrentWorkspace()
           _paq.push(['trackEvent', 'fileExplorer', 'workspaceMenu', 'workspaceDelete'])
           hideIconsMenu(!showIconsMenu)
         }}
+        key={`workspacesDelete-fe-ws`}
       >
         <span
           hidden={currentWorkspace === LOCALHOST || currentWorkspace === NO_WORKSPACE}
           id='workspaceDelete'
           data-id='workspaceDelete'
-          onClick={(e) => {
-            e.stopPropagation()
+          onClick={() => {
             deleteCurrentWorkspace()
             _paq.push(['trackEvent', 'fileExplorer', 'workspaceMenu', 'workspaceDelete'])
             hideIconsMenu(!showIconsMenu)
@@ -399,64 +419,58 @@ export function Workspace () {
           className='far fa-trash pl-2'
         >
         </span>
-        <span className="pl-3">{'Delete'}</span>
+        <span className="pl-3"><FormattedMessage id='filePanel.delete' defaultMessage='Delete' /></span>
       </div>
-    </OverlayTrigger>,
-    <OverlayTrigger
+    </CustomTooltip>,
+    <CustomTooltip
       placement='right-start'
-      overlay={
-        <Tooltip id="workspaceRenametooltip">
-          <span>Rename Workspace</span>
-        </Tooltip>
-      }
+      tooltipClasses="text-nowrap"
+      tooltipId="workspaceRenametooltip"
+      tooltipText={<FormattedMessage id='filePanel.workspace.rename' defaultMessage='Rename Workspace' />}
     >
-      <div onClick={(e) => {
-            e.stopPropagation()
+      <div onClick={() => {
             renameCurrentWorkspace()
             _paq.push(['trackEvent', 'fileExplorer', 'workspaceMenu', 'workspaceRename'])
             hideIconsMenu(!showIconsMenu)
           }}
           data-id='workspaceRename'
+          key={`workspacesRename-fe-ws`}
         >
         <span
           hidden={currentWorkspace === LOCALHOST || currentWorkspace === NO_WORKSPACE}
           id='workspaceRename'
           data-id='workspaceRename'
-          onClick={(e) => {
-            e.stopPropagation()
+          onClick={() => {
             renameCurrentWorkspace()
             _paq.push(['trackEvent', 'fileExplorer', 'workspaceMenu', 'workspaceRename'])
             hideIconsMenu(!showIconsMenu)
           }}
           className='far fa-edit pl-2'>
         </span>
-        <span className="pl-3">{'Rename'}</span>
+        <span className="pl-3"><FormattedMessage id='filePanel.rename' defaultMessage='Rename' /></span>
       </div>
-    </OverlayTrigger>,
+    </CustomTooltip>,
     <Dropdown.Divider className="border mb-0 mt-0" />,
-    <OverlayTrigger
+    <CustomTooltip
       placement="right-start"
-      overlay={
-        <Tooltip id="cloneWorkspaceTooltip" className="text-nowrap">
-          <span>Clone Git Repository</span>
-        </Tooltip>
-      }
+      tooltipId="cloneWorkspaceTooltip"
+      tooltipClasses="text-nowrap"
+      tooltipText={<FormattedMessage id='filePanel.workspace.clone' defaultMessage='Clone Git Repository' />}
     >
       <div
         data-id='cloneGitRepository'
-        onClick={(e) => {
-          e.stopPropagation()
+        onClick={() => {
           cloneGitRepository()
           _paq.push(['trackEvent', 'fileExplorer', 'workspaceMenu', 'cloneGitRepository'])
           hideIconsMenu(!showIconsMenu)
         }}
+        key={`cloneGitRepository-fe-ws`}
       >
         <span
           hidden={currentWorkspace === LOCALHOST}
           id='cloneGitRepository'
           data-id='cloneGitRepository'
-          onClick={(e) => {
-            e.stopPropagation()
+          onClick={() => {
             cloneGitRepository()
             _paq.push(['trackEvent', 'fileExplorer', 'workspaceMenu', 'cloneGitRepository'])
             hideIconsMenu(!showIconsMenu)
@@ -464,33 +478,30 @@ export function Workspace () {
           className='fab fa-github pl-2'
         >
         </span>
-        <span className="pl-3">{'Clone'}</span>
+        <span className="pl-3"><FormattedMessage id='filePanel.clone' defaultMessage='Clone' /></span>
       </div>
-    </OverlayTrigger>,
+    </CustomTooltip>,
     <Dropdown.Divider className="border mt-0 mb-0 remixui_menuhr" style={{ pointerEvents: 'none' }}/>,
-    <OverlayTrigger
+    <CustomTooltip
       placement="right-start"
-      overlay={
-        <Tooltip id="createWorkspaceTooltip" className="text-nowrap">
-          <span>Download Workspace</span>
-        </Tooltip>
-      }
+      tooltipId="createWorkspaceTooltip"
+      tooltipClasses="text-nowrap"
+      tooltipText={<FormattedMessage id='filePanel.workspace.download' defaultMessage='Download Workspace' />}
     >
       <div
         data-id='workspacesDownload'
-        onClick={(e) => {
-          e.stopPropagation()
+        onClick={() => {
           downloadWorkspaces()
           _paq.push(['trackEvent', 'fileExplorer', 'workspaceMenu', 'workspacesDownload'])
           hideIconsMenu(!showIconsMenu)
         }}
+        key={`workspacesDownload-fe-ws`}
       >
         <span
           hidden={currentWorkspace === LOCALHOST || currentWorkspace === NO_WORKSPACE}
           id='workspacesDownload'
           data-id='workspacesDownload'
-          onClick={(e) => {
-            e.stopPropagation()
+          onClick={() => {
             downloadWorkspaces()
             _paq.push(['trackEvent', 'fileExplorer', 'workspaceMenu', 'workspacesDownload'])
             hideIconsMenu(!showIconsMenu)
@@ -498,32 +509,29 @@ export function Workspace () {
           className='far fa-download pl-2 '
         >
         </span>
-        <span className="pl-3">{'Download'}</span>
+        <span className="pl-3"><FormattedMessage id='filePanel.download' defaultMessage='Download' /></span>
       </div>
-    </OverlayTrigger>,
-    <OverlayTrigger
+    </CustomTooltip>,
+    <CustomTooltip
       placement="right-start"
-      overlay={
-        <Tooltip id="createWorkspaceTooltip" className="text-nowrap">
-          <span>Restore Workspace Backup</span>
-        </Tooltip>
-      }
+      tooltipId="createWorkspaceTooltip"
+      tooltipClasses="text-nowrap"
+      tooltipText={<FormattedMessage id='filePanel.workspace.restore' defaultMessage='Restore Workspace Backup' />}
     >
       <div
         data-id='workspacesRestore'
-        onClick={(e) => {
-          e.stopPropagation()
+        onClick={() => {
           restoreBackup()
           _paq.push(['trackEvent', 'fileExplorer', 'workspaceMenu', 'workspacesRestore'])
           hideIconsMenu(!showIconsMenu)
         }}
+        key={`workspacesRestore-fe-ws`}
       >
         <span
           hidden={currentWorkspace === LOCALHOST}
           id='workspacesRestore'
           data-id='workspacesRestore'
-          onClick={(e) => {
-            e.stopPropagation()
+          onClick={() => {
             restoreBackup()
             _paq.push(['trackEvent', 'fileExplorer', 'workspaceMenu', 'workspacesRestore'])
             hideIconsMenu(!showIconsMenu)
@@ -531,11 +539,12 @@ export function Workspace () {
           className='far fa-upload pl-2'
         >
         </span>
-        <span className="pl-3">{'Restore'}</span>
+        <span className="pl-3"><FormattedMessage id='filePanel.restore' defaultMessage='Restore' /></span>
       </div>
-    </OverlayTrigger>,
+    </CustomTooltip>,
   ]
-
+  const menuLength = workspaceMenuIcons.length
+  let count = 0
   return (
     <div className='d-flex flex-column justify-content-between h-100'>
       <div className='remixui_container overflow-auto' style={{ maxHeight: selectedWorkspace && selectedWorkspace.isGitRepo ? '95%' : '100%' }}>
@@ -545,18 +554,16 @@ export function Workspace () {
               <div className="mx-2 mb-2 d-flex flex-column">
                 <div className="d-flex justify-content-between">
                   <span className="d-flex align-items-end">
-                    <label className="pl-1 form-check-label" htmlFor="workspacesSelect">
-                      WORKSPACES
+                    <label className="pl-1 form-check-label" htmlFor="workspacesSelect" style={{wordBreak: 'keep-all'}}>
+                      <FormattedMessage id='filePanel.workspace' defaultMessage='WORKSPACES' />
                     </label>
                   </span>
-                  <span className="remixui_menu remixui_topmenu d-flex justify-content-between align-items-end w-75">
-                    <OverlayTrigger
+                  {currentWorkspace !== LOCALHOST ? (<span className="remixui_menu remixui_topmenu d-flex justify-content-between align-items-end w-75">
+                    <CustomTooltip
                       placement="top-end"
-                      overlay={
-                        <Tooltip id="createWorkspaceTooltip" className="text-nowrap">
-                          <span>Create</span>
-                        </Tooltip>
-                      }
+                      tooltipId="createWorkspaceTooltip"
+                      tooltipClasses="text-nowrap"
+                      tooltipText={<FormattedMessage id='filePanel.create' defaultMessage='Create' />}
                     >
                         <span
                           hidden={currentWorkspace === LOCALHOST}
@@ -571,7 +578,7 @@ export function Workspace () {
                           className='far fa-plus remixui_menuicon d-flex align-self-end'
                           >
                         </span>
-                    </OverlayTrigger>
+                    </CustomTooltip>
                     <Dropdown id="workspacesMenuDropdown" data-id="workspacesMenuDropdown" onToggle={() => hideIconsMenu(!showIconsMenu)} show={showIconsMenu}>
                       <Dropdown.Toggle
                         as={CustomIconsToggle}
@@ -581,10 +588,10 @@ export function Workspace () {
                         icon={'fas fa-bars'}
                       ></Dropdown.Toggle>
                       <Dropdown.Menu as={CustomMenu} data-id="wsdropdownMenu" className='custom-dropdown-items remixui_menuwidth' rootCloseEvent="click">
-                        {
+                      {
                         workspaceMenuIcons.map(m => {
                           return (
-                            <Dropdown.Item>
+                            <Dropdown.Item key={`wsdropdownMenu-${count !== menuLength ? count++ : count }`}>
                               {m}
                             </Dropdown.Item>
                           )
@@ -592,7 +599,7 @@ export function Workspace () {
                       }
                       </Dropdown.Menu>
                     </Dropdown>
-                  </span>
+                  </span>) : null}
                 </div>
 
                 <Dropdown id="workspacesSelect" data-id="workspacesSelect" onToggle={toggleDropdown} show={showDropdown}>
@@ -629,7 +636,7 @@ export function Workspace () {
                           }
                           </Dropdown.Item>
                         ))
-                      }                      
+                      }
                       { ((global.fs.browser.workspaces.length <= 0) || currentWorkspace === NO_WORKSPACE) && <Dropdown.Item onClick={() => { switchWorkspace(NO_WORKSPACE) }}>{ <span className="pl-3">NO_WORKSPACE</span> }</Dropdown.Item> }
                     </Dropdown.Menu>
                   </Dropdown>
@@ -723,7 +730,7 @@ export function Workspace () {
         </div>
         {
           selectedWorkspace &&
-          <div className={`bg-light border-top ${selectedWorkspace.isGitRepo ? 'd-block' : 'd-none'}`} data-id="workspaceGitPanel">
+          <div className={`bg-light border-top ${selectedWorkspace.isGitRepo && currentBranch ? 'd-block' : 'd-none'}`} data-id="workspaceGitPanel">
             <div className='d-flex justify-space-between p-1'>
               <div className="mr-auto text-uppercase text-dark pt-2 pl-2">GIT</div>
               <div className="pt-1 mr-1" data-id="workspaceGitBranchesDropdown">
@@ -762,7 +769,7 @@ export function Workspace () {
                                 </div>
                               </Dropdown.Item>
                             )
-                          }) : 
+                          }) :
                           <Dropdown.Item onClick={switchToNewBranch}>
                             <div className="pl-1 pr-1" data-id="workspaceGitCreateNewBranch">
                               <i className="fas fa-code-branch pr-2"></i><span>Create branch: { branchFilter } from '{currentBranch}'</span>
@@ -771,7 +778,7 @@ export function Workspace () {
                         }
                       </div>
                       {
-                        (selectedWorkspace.branches || []).length > 4 && <div className='text-center border-top pt-2'><a href='#' style={{ fontSize: 12 }} onClick={showAllBranches}>view all branches</a></div>
+                        (selectedWorkspace.branches || []).length > 4 && <div className='text-center border-top pt-2'><label style={{ fontSize: 12, cursor: 'pointer' }} onClick={showAllBranches}>View all branches</label></div>
                       }
                     </div>
                   </Dropdown.Menu>

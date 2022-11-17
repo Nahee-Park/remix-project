@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useRef, useReducer } from 'react'
+import { FormattedMessage } from 'react-intl'
 import { ModalDialog } from '@remix-ui/modal-dialog' // eslint-disable-line
 import { Toaster } from '@remix-ui/toaster' // eslint-disable-line
+const _paq = window._paq = window._paq || [] // eslint-disable-line
 
 interface  HomeTabFileProps {
   plugin: any
@@ -36,7 +38,8 @@ function HomeTabFile ({plugin}: HomeTabFileProps) {
 
   const inputValue = useRef(null)
 
-  const processLoading = () => {
+  const processLoading = (type: string) => {
+    _paq.push(['trackEvent', 'hometab', 'filesSection', 'importFrom' + type])
     const contentImport = plugin.contentImport
     const workspace = plugin.fileManager.getProvider('workspace')
     contentImport.import(
@@ -51,7 +54,7 @@ function HomeTabFile ({plugin}: HomeTabFileProps) {
             else {
               workspace.addExternal(type + '/' + cleanUrl, content, url)
               plugin.call('menuicons', 'select', 'filePanel')
-            }   
+            }
           } catch (e) {
             toast(e.message)
           }
@@ -70,18 +73,22 @@ function HomeTabFile ({plugin}: HomeTabFileProps) {
   }
 
   const createNewFile = async () => {
+    _paq.push(['trackEvent', 'hometab', 'filesSection', 'createNewFile'])
     plugin.verticalIcons.select('filePanel')
     await plugin.call('filePanel', 'createNewFile')
   }
 
   const uploadFile = async (target) => {
+    _paq.push(['trackEvent', 'hometab', 'filesSection', 'uploadFile'])
     await plugin.call('filePanel', 'uploadFile', target)
   }
 
   const connectToLocalhost = () => {
+    _paq.push(['trackEvent', 'hometab', 'filesSection', 'connectToLocalhost'])
     plugin.appManager.activatePlugin('remixd')
   }
   const importFromGist = () => {
+    _paq.push(['trackEvent', 'hometab', 'filesSection', 'importFromGist'])
     plugin.call('gistHandler', 'load', '')
     plugin.verticalIcons.select('filePanel')
   }
@@ -108,7 +115,7 @@ function HomeTabFile ({plugin}: HomeTabFileProps) {
         okLabel='Import'
         hide={ !state.showModalDialog }
         handleHide={ () => hideFullMessage() }
-        okFn={ () => processLoading() }
+        okFn={ () => processLoading(state.modalInfo.title) }
       >
         <div className="p-2 user-select-auto">
           { state.modalInfo.loadItem !== '' && <span>Enter the { state.modalInfo.loadItem } you would like to load.</span> }
@@ -137,20 +144,20 @@ function HomeTabFile ({plugin}: HomeTabFileProps) {
       </ModalDialog>
       <Toaster message={state.toasterMsg} />
       <div className="justify-content-start mt-1 p-2 border-bottom d-flex flex-column" id="hTFileSection">
-        <label style={{fontSize: "1rem"}}>Files</label>
-        <button className="btn btn-primary p-2 border my-1" data-id="homeTabNewFile" style={{width: 'fit-content'}} onClick={() => createNewFile()}>New File</button>
-        <label className="btn p-2 border my-1" style={{width: 'fit-content'}} htmlFor="openFileInput">Open File</label>
+        <label style={{fontSize: "1rem"}}><FormattedMessage id='home.file' defaultMessage='Files' /></label>
+        <button className="btn btn-primary p-2 border my-1" data-id="homeTabNewFile" style={{width: 'fit-content'}} onClick={() => createNewFile()}><FormattedMessage id='home.newFile' defaultMessage='New File' /></button>
+        <label className="btn p-2 border my-1" style={{width: 'fit-content'}} htmlFor="openFileInput"><FormattedMessage id='home.openFile' defaultMessage='Open File' /></label>
         <input title="open file" type="file" id="openFileInput" onChange={(event) => {
           event.stopPropagation()
           plugin.verticalIcons.select('filePanel')
           uploadFile(event.target)
         }} multiple />
-        <button className="btn p-2 border my-1" style={{width: 'fit-content'}} onClick={() => connectToLocalhost()}>Connect to Localhost</button>
-        <label className="pt-2">Load From</label>
+        <button className="btn p-2 border my-1" style={{width: 'fit-content'}} onClick={() => connectToLocalhost()}><FormattedMessage id='home.connectToLocalhost' defaultMessage='Connect to Localhost' /></button>
+        <label className="pt-2"><FormattedMessage id='home.loadFrom' defaultMessage='Load From' /></label>
         <div className="d-flex">
           <button className="btn p-2 border mr-2" data-id="landingPageImportFromGitHubButton" onClick={() => showFullMessage('GitHub', 'github URL', ['https://github.com/0xcert/ethereum-erc721/src/contracts/tokens/nf-token-metadata.sol', 'https://github.com/OpenZeppelin/openzeppelin-solidity/blob/67bca857eedf99bf44a4b6a0fc5b5ed553135316/contracts/access/Roles.sol'])}>GitHub</button>
           <button className="btn p-2 border mr-2" data-id="landingPageImportFromGistButton" onClick={() => importFromGist()}>Gist</button>
-          <button className="btn p-2 border mr-2" onClick={() => showFullMessage('Ipfs', 'ipfs URL', ['ipfs://<ipfs-hash>'])}>IPFS</button> 
+          <button className="btn p-2 border mr-2" onClick={() => showFullMessage('Ipfs', 'ipfs URL', ['ipfs://<ipfs-hash>'])}>IPFS</button>
           <button className="btn p-2 border" onClick={() => showFullMessage('Https', 'http/https raw content', ['https://raw.githubusercontent.com/OpenZeppelin/openzeppelin-contracts/master/contracts/token/ERC20/ERC20.sol'])}>HTTPS</button>
         </div>
       </div>
