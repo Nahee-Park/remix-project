@@ -264,13 +264,16 @@ export function Workspace () {
             <option style={{fontSize: "small"}} value='remixDefault'>Default</option>
             <option style={{fontSize: "small"}} value='blank'>Blank</option>
           </optgroup>
-          <optgroup style={{fontSize: "medium"}} label="OpenZepplin">
+          <optgroup style={{fontSize: "medium"}} label="OpenZeppelin">
             <option style={{fontSize: "small"}} value='ozerc20'>ERC20</option>
             <option style={{fontSize: "small"}} value='ozerc721'>ERC721</option>
             <option style={{fontSize: "small"}} value='ozerc1155'>ERC1155</option>
           </optgroup>
           <optgroup style={{fontSize: "medium"}} label="0xProject">
             <option style={{fontSize: "small"}} value='zeroxErc20'>ERC20</option>
+          </optgroup>
+          <optgroup style={{fontSize: "medium"}} label="GnosisSafe">
+            <option style={{fontSize: "small"}} value='gnosisSafeMultisig'>MultiSig Wallet</option>
           </optgroup>
         </select>
 
